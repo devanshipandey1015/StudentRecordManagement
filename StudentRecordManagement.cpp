@@ -5,9 +5,7 @@
 
 using namespace std;
 
-// this is a linkedlist. here we are storing course data.
-
-
+// This is a linked list to store course data.
 struct Course {
     string courseName;
     string grade;
@@ -15,26 +13,24 @@ struct Course {
     Course(string cName, string g) : courseName(cName), grade(g), next(nullptr) {}
 };
 
-// binary search tree to sort students based on cgpa
-
+// Binary search tree node to store student data, sorted by GPA
 struct Student {
     int id;
     string name;
     float gpa;
+    int attendance;  // New field for attendance tracking
     Course* courseHistory; // Linked list of courses
     Student* left;
     Student* right;
-    
-    Student(int i, string n, float g) : id(i), name(n), gpa(g), courseHistory(nullptr), left(nullptr), right(nullptr) {}
+
+    Student(int i, string n, float g, int att = 0)
+        : id(i), name(n), gpa(g), attendance(att), courseHistory(nullptr), left(nullptr), right(nullptr) {}
 };
 
-
-// hash table is used for storing our student id
-
+// Hash table to store student ID mappings
 unordered_map<int, Student*> studentHashTable;
 
-//  function for inserting student data into BST
-
+// Function for inserting student data into the Binary Search Tree (BST)
 Student* insertStudentBST(Student* root, Student* newStudent) {
     if (!root) return newStudent;
     if (newStudent->gpa < root->gpa) root->left = insertStudentBST(root->left, newStudent);
@@ -42,8 +38,7 @@ Student* insertStudentBST(Student* root, Student* newStudent) {
     return root;
 }
 
-// FUNCTION FOR DISPLAYING COURSE HISTORY 
-
+// Function for displaying a student's course history
 void displayCourseHistory(Course* courseHead) {
     Course* temp = courseHead;
     while (temp) {
@@ -52,19 +47,17 @@ void displayCourseHistory(Course* courseHead) {
     }
 }
 
-// Func for student data
-
-
+// Function for displaying a student's data
 void displayStudentData(Student* student) {
     if (!student) return;
     cout << "ID: " << student->id << ", Name: " << student->name << ", GPA: " << student->gpa << endl;
+    cout << "Attendance: " << student->attendance << " days present" << endl;
     cout << "Course History: " << endl;
     displayCourseHistory(student->courseHistory);
     cout << "-----------------------------" << endl;
 }
 
-// traversal to show student data - inorder
-
+// In-order traversal to show student data, sorted by GPA
 void displayAllStudents(Student* root) {
     if (!root) return;
     displayAllStudents(root->left);
@@ -72,40 +65,39 @@ void displayAllStudents(Student* root) {
     displayAllStudents(root->right);
 }
 
-// to add new course
-
+// Function to add a new course to a student's course history
 void addCourse(Student* student, string courseName, string grade) {
     Course* newCourse = new Course(courseName, grade);
     newCourse->next = student->courseHistory;
     student->courseHistory = newCourse;
 }
 
-// to add new student
-
+// Function to add a new student
 Student* addStudent(Student* bstRoot) {
     int id;
     string name;
     float gpa;
-    
+    int attendance;
+
     cout << "Enter Student ID: ";
     cin >> id;
     cout << "Enter Student Name: ";
     cin >> name;
     cout << "Enter GPA: ";
     cin >> gpa;
+    cout << "Enter Attendance (days present): ";
+    cin >> attendance;
 
-    //  new student
-    Student* newStudent = new Student(id, name, gpa);
+    // Create a new student
+    Student* newStudent = new Student(id, name, gpa, attendance);
 
-    // inserting in hash table
-
+    // Insert into hash table
     studentHashTable[id] = newStudent;
 
-    // inserting in binary tree
-
+    // Insert into binary search tree
     bstRoot = insertStudentBST(bstRoot, newStudent);
 
-    // adding courses
+    // Add courses to the student's history
     int numCourses;
     cout << "Enter number of courses: ";
     cin >> numCourses;
@@ -119,8 +111,7 @@ Student* addStudent(Student* bstRoot) {
     return bstRoot;
 }
 
-// to search for student by ID
-
+// Function to search for a student by ID
 void searchStudentById(int id) {
     if (studentHashTable.find(id) != studentHashTable.end()) {
         displayStudentData(studentHashTable[id]);
@@ -129,18 +120,39 @@ void searchStudentById(int id) {
     }
 }
 
-// main
+// Function to update a student's attendance
+void updateAttendance(int id, int daysPresent) {
+    if (studentHashTable.find(id) != studentHashTable.end()) {
+        studentHashTable[id]->attendance = daysPresent;
+        cout << "Updated attendance for ID " << id << " to " << daysPresent << " days present." << endl;
+    } else {
+        cout << "Student with ID " << id << " not found." << endl;
+    }
+}
 
+// Function to display a student's attendance
+void displayStudentAttendance(int id) {
+    if (studentHashTable.find(id) != studentHashTable.end()) {
+        cout << "Attendance for " << studentHashTable[id]->name << ": "
+             << studentHashTable[id]->attendance << " days present." << endl;
+    } else {
+        cout << "Student with ID " << id << " not found." << endl;
+    }
+}
+
+// Main function with menu options
 int main() {
     Student* bstRoot = nullptr;
-    int choice, id;
+    int choice, id, attendance;
 
     do {
         cout << "Student Record Management System" << endl;
         cout << "1. Add Student" << endl;
         cout << "2. Display All Students (sorted by GPA)" << endl;
         cout << "3. Search Student by ID" << endl;
-        cout << "4. Exit" << endl;
+        cout << "4. Update Attendance" << endl;
+        cout << "5. Display Attendance by Student ID" << endl;
+        cout << "6. Exit" << endl;
         cout << "Enter choice: ";
         cin >> choice;
 
@@ -157,12 +169,24 @@ int main() {
                 searchStudentById(id);
                 break;
             case 4:
+                cout << "Enter Student ID to update attendance: ";
+                cin >> id;
+                cout << "Enter number of days present: ";
+                cin >> attendance;
+                updateAttendance(id, attendance);
+                break;
+            case 5:
+                cout << "Enter Student ID to display attendance: ";
+                cin >> id;
+                displayStudentAttendance(id);
+                break;
+            case 6:
                 cout << "Exiting..." << endl;
                 break;
             default:
                 cout << "Invalid choice. Try again." << endl;
         }
-    } while (choice != 4);
+    } while (choice != 6);
 
     return 0;
 }
